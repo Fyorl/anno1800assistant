@@ -1,5 +1,5 @@
 .addIsland, .island {
-    margin: 5px 0px 5px 5px;
+    margin: 5px 0 5px 5px;
     display: inline-block;
     vertical-align: top;
 }
@@ -21,7 +21,7 @@
 }
 
 .islandNameContainer, .islandHeaderWrapper {
-    text-align: center;    
+    text-align: center;
 }
 
 .islandHeader {
@@ -48,9 +48,9 @@ input[type="number"] {
     padding-right: 10px;
 }
 
-.showUnusedToggle {    
+.showUnusedToggle {
     position: absolute;
-    bottom: 0px;
+    bottom: 0;
     right: -10px;
 }
 .showUnusedToggle, .showUnusedToggle * {
@@ -68,7 +68,7 @@ input[type="number"] {
     font-weight: bold;
     position: relative;
 }
-.houseCountColumn.populationCount {    
+.houseCountColumn.populationCount {
     padding-left: 68px;
 }
 .houseCountColumn > * {
@@ -114,7 +114,7 @@ input[type="number"] {
 }
 
 .factoryColumn {
-    display: inline-block;    
+    display: inline-block;
     vertical-align: top;
 }
 
@@ -127,7 +127,7 @@ input[type="number"] {
     border-left: 1px solid gray;
     border-right: 1px solid gray;
     border-radius: 3px;
-    padding: 1px 1px 0px 8px;
+    padding: 1px 1px 0 8px;
     background-color: white;
 }
 .factory:last-child {
@@ -143,7 +143,7 @@ input[type="number"] {
     background-color: #fff26d;
 }
 .factory.focusedFactory {
-    box-shadow: inset 0px 0px 5px #e756f9
+    box-shadow: inset 0 0 5px #e756f9
 }
 
 .productivityColumn {

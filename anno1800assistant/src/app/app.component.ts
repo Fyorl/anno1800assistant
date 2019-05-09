@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, OnChanges, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, HostListener, ElementRef, ViewChild } from '@angular/core';
 import { PopulationLevelsFactory, PopulationLevel, PopulationLevelSaveInfo } from './data/populations';
 import { Factory, Factories, FactorySaveInfo } from './data/factories';
 
@@ -10,51 +10,52 @@ import { Factory, Factories, FactorySaveInfo } from './data/factories';
 export class AppComponent implements OnInit {
   constructor() { }
 
-  Islands: Island[]
-  Shift_key_held: boolean = false;
-  Ctrl_key_held: boolean = false;
-  Autosave_throttle: Date;
+  Islands: Island[];
+  ShiftKeyHeld = false;
+  CtrlKeyHeld = false;
+  AutosaveThrottle: Date;
   FocusedFactoryID: number;
 
+  @ViewChild('loadInput') loadInput: ElementRef;
+
   ngOnInit() {
-    this.Autosave_throttle = new Date(new Date().getTime() + 100)
-    let saveData = window.localStorage.getItem('anno1800assistantsave');
-    
+    this.AutosaveThrottle = new Date(new Date().getTime() + 100);
+    const saveData = window.localStorage.getItem('anno1800assistantsave');
+
     if (!saveData) {
       this.Reset();
       return;
     }
 
-    try {      
-      let saveObject = JSON.parse(saveData) as SaveData;
-      this.LoadData(saveObject);      
-    }
-    catch {
+    try {
+      const saveObject = JSON.parse(saveData) as SaveData;
+      this.LoadData(saveObject);
+    } catch {
       this.Reset();
     }
   }
 
   ngDoCheck() {
-    this.Autosave();    
+    this.Autosave();
   }
-  
+
   Reset() {
     this.Islands = [];
     this.AddIsland();
-  }  
+  }
 
   AddIsland() {
-    this.Islands.push(new Island("Island " + (this.Islands.length + 1)));
+    this.Islands.push(new Island('Island ' + (this.Islands.length + 1)));
   }
 
   MoveIslandUp(index: number) {
-    let island = this.Islands[index];
+    const island = this.Islands[index];
     this.Islands.splice(index, 1);
     this.Islands.splice(index - 1, 0, island);
   }
 
   MoveIslandDown(index: number) {
-    let island = this.Islands[index];
+    const island = this.Islands[index];
     this.Islands.splice(index, 1);
     this.Islands.splice(index + 1, 0, island);
   }
@@ -68,59 +69,57 @@ export class AppComponent implements OnInit {
   }
 
   Autosave() {
-    if (this.Autosave_throttle && new Date() < this.Autosave_throttle) {
+    if (this.AutosaveThrottle && new Date() < this.AutosaveThrottle) {
       return;
     }
 
     window.localStorage.setItem('anno1800assistantsave', JSON.stringify(this.GenerateSaveData()));
-    this.Autosave_throttle = new Date(new Date().getTime() + 100)
+    this.AutosaveThrottle = new Date(new Date().getTime() + 100);
   }
 
-  ManualSave() {  
-    var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.GenerateSaveData()));
-    var downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href",     dataStr);
-    downloadAnchorNode.setAttribute("download", "anno1800AssistantSaveData.json");
+  ManualSave() {
+    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(this.GenerateSaveData()));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute('href',     dataStr);
+    downloadAnchorNode.setAttribute('download', 'anno1800AssistantSaveData.json');
     document.body.appendChild(downloadAnchorNode); // required for firefox
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
   }
 
   TriggerFileUpload() {
-    let el: HTMLElement = this.loadInput.nativeElement as HTMLElement;
+    const el: HTMLElement = this.loadInput.nativeElement as HTMLElement;
     el.click();
   }
 
   ManualLoad(event: any) {
-    let self = this;
-    var reader = new FileReader();
+    const self = this;
+    const reader = new FileReader();
 
-    reader.onload = function(onLoadEvent: any) {
-      let data = JSON.parse(onLoadEvent.target.result) as SaveData;
+    reader.onload = (onLoadEvent: any) => {
+      const data = JSON.parse(onLoadEvent.target.result) as SaveData;
       self.LoadData(data);
-      self.Autosave_throttle = null;
+      self.AutosaveThrottle = null;
       self.Autosave();
-    }
-  
+    };
+
     reader.readAsText(event.target.files[0]);
   }
 
   GenerateSaveData(): SaveData {
-    let save: IslandSaveInfo[] = [];
-    for (var i = 0; i < this.Islands.length; i++) {
-      let island = this.Islands[i];
-      let populationLevels: PopulationLevelSaveInfo[] = [];
-      let factories: FactorySaveInfo[] = [];
+    const save: IslandSaveInfo[] = [];
+    for (const island of this.Islands) {
+      const populationLevels: PopulationLevelSaveInfo[] = [];
+      const factories: FactorySaveInfo[] = [];
 
-      for (var pop = 0; pop < island.PopulationLevels.length; pop++) {
+      for (const populationLevel of island.PopulationLevels) {
         populationLevels.push({
-          HouseCount: island.PopulationLevels[pop].HouseCount,
-          ShowUnused: island.PopulationLevels[pop].ShowUnused
+          HouseCount: populationLevel.HouseCount,
+          ShowUnused: populationLevel.ShowUnused
         });
       }
 
-      for (var fact = 0; fact < island.Factories.length; fact++) {
-        let factory = island.Factories[fact];
+      for (const factory of island.Factories) {
         factories.push({
           FactoryID: factory.ID,
           ParentFactoryID: factory.ParentFactoryOrThisRecursive.ID,
@@ -143,46 +142,44 @@ export class AppComponent implements OnInit {
   }
 
   LoadData(data: SaveData) {
-    this.Islands = [];      
-    for (var i = 0; i < data.Islands.length; i++) {
-      this.Islands.push(new Island(data.Islands[i].Name, data.Islands[i]));
+    this.Islands = [];
+    for (const island of data.Islands) {
+      this.Islands.push(new Island(island.Name, island));
     }
   }
 
-  @ViewChild('loadInput') loadInput: ElementRef;
-
   @HostListener('window:keydown', ['$event'])
-  keyDownEvent(event: KeyboardEvent) {        
+  keyDownEvent(event: KeyboardEvent) {
     if (event.keyCode === 16) {
-      this.Shift_key_held = true;
+      this.ShiftKeyHeld = true;
     }
 
     if (event.keyCode === 17) {
-      this.Ctrl_key_held = true;
+      this.CtrlKeyHeld = true;
     }
   }
 
   @HostListener('window:keyup', ['$event'])
-  keyUpEvent(event: KeyboardEvent) {        
+  keyUpEvent(event: KeyboardEvent) {
     if (event.keyCode === 16) {
-      this.Shift_key_held = false;
+      this.ShiftKeyHeld = false;
     }
 
     if (event.keyCode === 17) {
-      this.Ctrl_key_held = false;
+      this.CtrlKeyHeld = false;
     }
   }
 
   PromotionCount(): number {
-    return 1 * (this.Ctrl_key_held ? 5 : 1) * (this.Shift_key_held ? 10 : 1);
+    return (this.CtrlKeyHeld ? 5 : 1) * (this.ShiftKeyHeld ? 10 : 1);
   }
 
   GetTradeBalance(factoryID: number): number {
     let balance = 0;
 
-    for (var i = 0; i < this.Islands.length; i++) {
-      let factory = this.Islands[i].Factories.filter(f => f.ID === factoryID)[0];
-      balance += (factory.Productivity * factory.TradeBalance / 100);
+    for (const island of this.Islands) {
+      const factory = island.Factories.filter(f => f.ID === factoryID)[0];
+      balance += factory.Productivity * factory.TradeBalance / 100;
     }
 
     return balance;
@@ -194,22 +191,22 @@ export class AppComponent implements OnInit {
 }
 
 export class SaveData {
-  Islands: IslandSaveInfo[]
+  Islands: IslandSaveInfo[];
 }
 
 export class IslandSaveInfo {
-  Name: string
-  PopulationLevels: PopulationLevelSaveInfo[]
-  Factories: FactorySaveInfo[]
-  IsMinimized: boolean
+  Name: string;
+  PopulationLevels: PopulationLevelSaveInfo[];
+  Factories: FactorySaveInfo[];
+  IsMinimized: boolean;
 }
 
 export class Island {
-  Name: string
-  PopulationLevels: PopulationLevel[]
-  Factories: Factory[]
-  FactoryGroups: Factory[][]
-  IsMinimized: boolean
+  Name: string;
+  PopulationLevels: PopulationLevel[];
+  Factories: Factory[];
+  FactoryGroups: Factory[][];
+  IsMinimized: boolean;
 
   ToggleMinimized() {
     this.IsMinimized = !this.IsMinimized;
@@ -220,8 +217,8 @@ export class Island {
     this.IsMinimized = false;
 
     this.PopulationLevels = new PopulationLevelsFactory().GetPopulationLevels();
-    if (saveInfo) {      
-      for (var i = 0; i < saveInfo.PopulationLevels.length; i++) {
+    if (saveInfo) {
+      for (let i = 0; i < saveInfo.PopulationLevels.length; i++) {
         this.PopulationLevels[i].HouseCount = saveInfo.PopulationLevels[i].HouseCount;
         this.PopulationLevels[i].ShowUnused = saveInfo.PopulationLevels[i].ShowUnused;
       }
@@ -233,7 +230,7 @@ export class Island {
 
     // Referencing factories by ID here for possible additional language support
     // Farmers
-    this.AddFactoryChain(1010278, saveInfo); // Fishery    
+    this.AddFactoryChain(1010278, saveInfo); // Fishery
     this.AddFactoryChain(1010294, saveInfo); // Schnapps
     this.AddFactoryChain(1010315, saveInfo); // Knitter
     // Workers
@@ -281,20 +278,20 @@ export class Island {
 
 
   AddFactoryChain(factoryID: number, saveInfo: IslandSaveInfo) {
-    let factory = new Factory(new Factories().AllFactories.filter(f => f.ID === factoryID)[0]);
+    const factory = new Factory(new Factories().AllFactories.filter(f => f.ID === factoryID)[0]);
 
     if (saveInfo) {
-      let savedFactoryInfos = saveInfo.Factories.filter(f => f.FactoryID === factory.ID);
+      const savedFactoryInfos = saveInfo.Factories.filter(f => f.FactoryID === factory.ID);
       let savedFactoryInfo = savedFactoryInfos[0];
 
       if (savedFactoryInfos.length > 1) {
-        let matchingSavedFactoryInfo = savedFactoryInfos.filter(f => f.ParentFactoryID === factory.ParentFactoryOrThisRecursive.ID)[0];
-        
+        const matchingSavedFactoryInfo = savedFactoryInfos.filter(f => f.ParentFactoryID === factory.ParentFactoryOrThisRecursive.ID)[0];
+
         // Doing a check here to make sure we matched to be backwards-compatible with old saves. This can eventually be removed.
         if (matchingSavedFactoryInfo) {
           savedFactoryInfo = matchingSavedFactoryInfo;
         }
-      }          
+      }
 
       if (savedFactoryInfo) {
         factory.Enabled = savedFactoryInfo.Enabled;
@@ -304,40 +301,42 @@ export class Island {
       }
     }
 
-    this.Factories.push(factory);    
-    let group = [factory];
+    this.Factories.push(factory);
+    const group = [factory];
     this.ProcessChildFactories(factory, group, saveInfo);
     this.FactoryGroups.push(group);
   }
 
 
   ProcessChildFactories(parentFactory: Factory, group: Factory[], saveInfo: IslandSaveInfo) {
-    for (var i = 0; i < parentFactory.Inputs.length; i++) {
-      let matchedRawFactories = new Factories().AllFactories.filter(f => 
-        f.Outputs.filter(output => output.ProductID === parentFactory.Inputs[i].ProductID).length > 0
+    for (const input of parentFactory.Inputs) {
+      const matchedRawFactories = new Factories().AllFactories.filter(f =>
+        f.Outputs.filter(output => output.ProductID === input.ProductID).length > 0
       );
 
       // Accounting for new world variants of factories
       let matchedRawFactory = matchedRawFactories[0];
       if (matchedRawFactories.length > 1) {
-        matchedRawFactory = matchedRawFactories.filter(f => f.IsNewWorld === parentFactory.IsNewWorld && f.IsOldWorld === parentFactory.IsOldWorld)[0];
+        matchedRawFactory = matchedRawFactories.filter(f =>
+          f.IsNewWorld === parentFactory.IsNewWorld && f.IsOldWorld === parentFactory.IsOldWorld)[0];
       }
 
       if (matchedRawFactory) {
-        let newFactory = new Factory(matchedRawFactory);
+        const newFactory = new Factory(matchedRawFactory);
 
         if (saveInfo) {
-          let savedFactoryInfos = saveInfo.Factories.filter(f => f.FactoryID === newFactory.ID);
+          const savedFactoryInfos = saveInfo.Factories.filter(f => f.FactoryID === newFactory.ID);
           let savedFactoryInfo = savedFactoryInfos[0];
 
           if (savedFactoryInfos.length > 1) {
-            let matchingSavedFactoryInfo = savedFactoryInfos.filter(f => f.ParentFactoryID === parentFactory.ParentFactoryOrThisRecursive.ID)[0];
-            
+            const matchingSavedFactoryInfo = savedFactoryInfos.filter(f =>
+              f.ParentFactoryID === parentFactory.ParentFactoryOrThisRecursive.ID)[0];
+
             // Doing a check here to make sure we matched to be backwards-compatible with old saves. This can eventually be removed.
             if (matchingSavedFactoryInfo) {
               savedFactoryInfo = matchingSavedFactoryInfo;
             }
-          }          
+          }
 
           if (savedFactoryInfo) {
             newFactory.Enabled = savedFactoryInfo.Enabled;
@@ -354,31 +353,31 @@ export class Island {
         this.ProcessChildFactories(newFactory, group, saveInfo);
       }
     }
-  }  
+  }
 
   EnabledFactoryGroups() {
     return this.FactoryGroups.filter(f => f[0].IsInUse(this.PopulationLevels));
   }
 
   GetColumnLayouts() {
-    let columnCount = 2;
-    let columns = [];
-    for (var i = 0; i < columnCount; i++) {
+    const columnCount = 2;
+    const columns = [];
+    for (let i = 0; i < columnCount; i++) {
       columns[i] = [];
     }
 
-    let enabledGroups = this.EnabledFactoryGroups();
-    for (var i = 0; i < enabledGroups.length; i++) {
+    const enabledGroups = this.EnabledFactoryGroups();
+    for (const group of enabledGroups) {
       let smallest = columns[0];
 
-      for (var k = 0; k < columnCount; k++) {
+      for (let k = 0; k < columnCount; k++) {
         if (columns[k].length < smallest.length) {
           smallest = columns[k];
         }
       }
 
-      for (var k = 0; k < enabledGroups[i].length; k++) {
-        smallest.push(enabledGroups[i][k]);      
+      for (const subGroup of group) {
+        smallest.push(subGroup);
       }
     }
 
